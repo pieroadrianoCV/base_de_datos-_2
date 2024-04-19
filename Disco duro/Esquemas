@@ -1,2 +1,2 @@
 Estudiantes#nombre#string#id#int#dpto#string
-Titanicnt#PassengerId#int#Survived#int#Pclass#int#Name#string#Age#string#SibSp#string#Parch#string#Ticket#int#Cabin#string#Embarked#string
+Titanic
