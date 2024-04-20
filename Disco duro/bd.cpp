@@ -4,8 +4,9 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
-
+#include <vector>
 using namespace std;
+#define esquemas "Esquemas"
 
 string determinarTipoDato(const string& valor) {
     bool soloDigitos = true;
@@ -50,15 +51,15 @@ string capitalize(string& str) {
 void create_esquema(string relacion_nombre = "") {
     string archivo_csv;
     if(relacion_nombre == ""){
-        cout << "Ingrese nombre de la relacion ? ";
+        cout << "Enter relationship name: ";
         cin >> relacion_nombre;
     }else{
-        cout<<"Se creara relacion:"<<relacion_nombre<<endl;
+        cout<<"The relationship will be created:"<<relacion_nombre<<endl;
     }
     relacion_nombre = capitalize(relacion_nombre);
-    cout<<"Enter the file name to create your outline with .csv"<<endl;cin>>archivo_csv;//nombre de la relacion deberia ser
+    cout<<"Enter the name of the .csv file to create the schema"<<endl;cin>>archivo_csv;//nombre de la relacion deberia abrir
 
-    ofstream archivo_salida_esquemas("Esquemas", ios::app);
+    ofstream archivo_salida_esquemas(esquemas, ios::app);
     ifstream archivo_entrada(archivo_csv);
     archivo_salida_esquemas << relacion_nombre;
 
@@ -74,11 +75,11 @@ void create_esquema(string relacion_nombre = "") {
     archivo_salida_esquemas << endl;
     archivo_entrada.close();
     archivo_salida_esquemas.close();
-    cout << "Esquemas creados exitosamente." << endl;
+    cout << "Schematics created successfully" << endl;
 }
 
 bool existe_relacion(string relacion) {
-    ifstream archivo_entrada("Esquemas");
+    ifstream archivo_entrada(esquemas);
     string linea;
     while(getline(archivo_entrada,linea,'#')){
         if(linea == relacion)
@@ -90,19 +91,19 @@ bool existe_relacion(string relacion) {
 void create_relacion() {
     string nombre_archivo_relacion;
     string nombre_relacion;
-    cout<<"ingrese nombre de la relacion;";cout<<endl;cin>>nombre_relacion;   
+    cout<<"Enter relationship name: "<<endl;cin>>nombre_relacion;   
     
 
     if(!existe_relacion(capitalize(nombre_relacion))) {
-        cout<<"No existe la relacion"<<nombre_relacion<<endl;
+        cout<<" The relationship does not exist "<<nombre_relacion<<endl;
         create_esquema(nombre_relacion);
     }
 
-    cout<<"Enter the name of the file to extract the data with .csv"<<endl;cin>>nombre_archivo_relacion; //pedir al usuario el nombre del archivo a extraer los datos
+    cout<<"Enter file name with .csv to extract data"<<endl;cin>>nombre_archivo_relacion; //pedir al usuario el nombre del archivo a extraer los datos
 
     ifstream archivo_entrada(nombre_archivo_relacion);
     if (!archivo_entrada.is_open()) {
-        cerr << "Error al abrir el archivo CSV." << endl;
+        cerr << "Error opening CSV file." << endl;
         return;
     }
     string nombre_archivo_salida = nombre_relacion;
@@ -123,20 +124,40 @@ void create_relacion() {
     archivo_salida.close();
 }
 
+bool validate(string nombre_relacion) {
+    string linea;
+    ifstream archivo_entrada(esquemas);
+    while(getline(archivo_entrada,linea)){
+        int pos=linea.find(nombre_relacion);
+        //cout<<pos<<endl;
+        vector <string> elementos;
+        if(pos != -1) {
+            string linea2;
+            istringstream linea3(linea);
+            getline(linea3,linea2,'#');
+            elementos.push_back(linea2);
+            return true;
+        }
+    }
+    return false;
+}
+
 //mejorar esto
 void init(){
-    int d_continue=0;
     string commands;
+    cout<<" % MEGATRON3000 %"<<endl<<endl;
+    cout<<"   WELCOME TO MEGATRON 3000!"<<endl<<endl;
+    cout<<" Write the command to realize:"<<endl<<endl;
     while(true){
         cin>>commands;
-        if(commands == "crear_esquema()")
+        if(commands == "create_esquema")
             create_esquema();
-        else if(commands == "crear_relacion()")
+        else if(commands == "create_relacion")
             create_relacion();
-        else if(commands == "exit()")
+        else if(commands == "exit")
             break;
         else
-            cout<<"comando no valido"<<endl;
+            cout<<"Not command"<<endl;
     }
     
     // if(d_continue==0){
@@ -149,6 +170,9 @@ void init(){
 }
 
 int main() {
-    init();
+    cout<< validate("Estudiantes");
+    cout<< validate("Estudiantessdfsdf");
+    cout<< validate("Titanic");
+    //init();
     return 0;  
 }
