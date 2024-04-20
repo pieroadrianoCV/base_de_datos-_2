@@ -1,6 +1,6 @@
 #include "helpers.h"
 
-namespace utils {
+namespace helpers {
     std::string capitalize(std::string str) {
         if (!str.empty()) {
             str[0] = toupper(str[0]);
