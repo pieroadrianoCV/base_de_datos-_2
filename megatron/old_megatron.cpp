@@ -9,6 +9,10 @@ using namespace std;
 #define esquemas "Esquemas"
 
 string determinarTipoDato(const string& valor) {
+    if (valor.empty()) {
+        return "empty";
+    }
+
     bool soloDigitos = true;
     bool puntoDecimal = false;
 
@@ -46,6 +50,64 @@ string capitalize(string& str) {
         transform(str.begin() + 1, str.end(), str.begin() + 1, [](unsigned char c) { return tolower(c); });
     }
     return str;
+}
+
+vector<string> get_type_from_line(string line) {
+    vector<string> types;
+    string value;
+    stringstream ss(line);
+    while (getline(ss, value, ';')) {
+        types.push_back(determinarTipoDato(value));
+    }
+    return types;
+}
+
+// Sigue fallando en el caso en el que se termine con 1 ; extra
+bool operator==(const vector<string>& a, const vector<string>& b) {
+    if (a.size() < b.size()) return false;
+    if (a.size() > b.size()) return true;
+
+    for (int i = 0; i < a.size(); i++) {
+        if (a[i] != b[i] && b[i] != "empty") return false;
+    }
+
+    return true;
+}
+
+bool validate(string nombre_relacion, string archivo_relacion) {
+    string linea_esquema;
+    ifstream archivo_entrada(esquemas); //archivo esquemas -> Estudiantes#nombre#string#id#int#dpto#string
+    vector <string> elementos; // ["string", "int", "string"]
+    int pos;
+    while(getline(archivo_entrada, linea_esquema)){
+        string palabra_linea_esquema;
+        istringstream linea_esquema_stream(linea_esquema);
+        pos = linea_esquema.find(nombre_relacion);
+        if (pos == 0) {
+            while (getline(linea_esquema_stream, palabra_linea_esquema, '#')) {
+                if (pos > 1 && pos % 2 == 0) {
+                    elementos.push_back(palabra_linea_esquema);
+                }
+                pos++;
+            }
+            break;
+        }
+    }
+
+    if (pos == -1) return false;
+
+    string linea_data_relacion;
+    ifstream data_relacion(archivo_relacion);
+    int pos_linea = 0;
+    while(getline(data_relacion, linea_data_relacion)) {
+        if (pos_linea == 0) {
+            pos_linea++;
+            continue;
+        }
+        vector<string> types = get_type_from_line(linea_data_relacion); // ["string", "int", "string"]
+        if (!(elementos == types)) return false;
+    }
+    return true;
 }
 
 void create_esquema(string relacion_nombre = "") {
@@ -106,41 +168,33 @@ void create_relacion() {
         cerr << "Error opening CSV file." << endl;
         return;
     }
-    string nombre_archivo_salida = nombre_relacion;
-    ofstream archivo_salida(nombre_archivo_salida);
+    string nombre_archivo_salida = capitalize(nombre_relacion);
+    bool validacion = validate(nombre_archivo_salida, nombre_archivo_relacion);
+    cout << "Validation: " << validacion << endl;
+    if (validacion == true) {
+        ofstream archivo_salida(nombre_archivo_salida);
 
-    string linea;
-    bool primera_linea = true;
+        string linea;
+        bool primera_linea = true;
 
-    while (getline(archivo_entrada, linea)) {
-        if (primera_linea) {
-            primera_linea = false;
-            continue; 
+        while (getline(archivo_entrada, linea)) {
+            if (primera_linea) {
+                primera_linea = false;
+                continue; 
+            }
+            archivo_salida << linea << endl;
         }
-        archivo_salida << linea << endl;
-    }
 
-    archivo_entrada.close();
-    archivo_salida.close();
+        archivo_entrada.close();
+        archivo_salida.close();
+        cout << "Relaiton created successfully" << endl;
+    }
+    else {
+        cout << "The data does not match the schema" << endl;
+    }
 }
 
-bool validate(string nombre_relacion) {
-    string linea;
-    ifstream archivo_entrada(esquemas);
-    while(getline(archivo_entrada,linea)){
-        int pos=linea.find(nombre_relacion);
-        //cout<<pos<<endl;
-        vector <string> elementos;
-        if(pos != -1) {
-            string linea2;
-            istringstream linea3(linea);
-            getline(linea3,linea2,'#');
-            elementos.push_back(linea2);
-            return true;
-        }
-    }
-    return false;
-}
+
 
 //mejorar esto
 void init(){
@@ -159,20 +213,9 @@ void init(){
         else
             cout<<"Not command"<<endl;
     }
-    
-    // if(d_continue==0){
-    //     cout<<"WELCOME TO MEGATRON-3000"<<endl;
-    //     create_esquema();    
-    //     create_relacion();
-    //     cout<<"Will you continue? '0' to continue , '1' to break"<<endl;cin>>d_continue;
-    //     init();
-    // }
 }
 
 int main() {
-    cout<< validate("Estudiantes");
-    cout<< validate("Estudiantessdfsdf");
-    cout<< validate("Titanic");
-    //init();
+    init();
     return 0;  
 }
