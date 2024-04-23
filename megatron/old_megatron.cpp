@@ -155,7 +155,6 @@ void create_relacion() {
     string nombre_relacion;
     cout<<"Enter relationship name: "<<endl;cin>>nombre_relacion;   
     
-
     if(!existe_relacion(capitalize(nombre_relacion))) {
         cout<<" The relationship does not exist "<<nombre_relacion<<endl;
         create_esquema(nombre_relacion);
@@ -168,34 +167,85 @@ void create_relacion() {
         cerr << "Error opening CSV file." << endl;
         return;
     }
-    string nombre_archivo_salida = capitalize(nombre_relacion);
-    bool validacion = validate(nombre_archivo_salida, nombre_archivo_relacion);
-    cout << "Validation: " << validacion << endl;
-    if (validacion == true) {
-        ofstream archivo_salida(nombre_archivo_salida);
 
+    string nombre_archivo_salida = capitalize(nombre_relacion); // Estudiantes
+    bool validacion = validate(nombre_archivo_salida, nombre_archivo_relacion);
+    if (validacion == true) {
+        ofstream archivo_salida(nombre_archivo_salida, ios::app); //Estudiantes
         string linea;
         bool primera_linea = true;
 
-        while (getline(archivo_entrada, linea)) {
+        while (getline(archivo_entrada, linea)) { //estudiantes_data.csv -> Piero;123;Lima
             if (primera_linea) {
                 primera_linea = false;
                 continue; 
             }
-            archivo_salida << linea << endl;
+            int count_commas = count(linea.begin(), linea.end(), ';');
+            int count_hashtag = 0;
+            stringstream ss(linea);
+            string valor;
+            while (getline(ss, valor, ';')) {
+                archivo_salida << valor;
+                if (count_hashtag < count_commas) {
+                    archivo_salida << "#";
+                    count_hashtag++;
+                }
+            }
+            archivo_salida << endl;
         }
 
         archivo_entrada.close();
         archivo_salida.close();
-        cout << "Relaiton created successfully" << endl;
+        cout << "Relation created successfully" << endl;
     }
     else {
         cout << "The data does not match the schema" << endl;
     }
 }
 
+string encontrar_relacion(string nombre_relacion){
+    string linea_esquema;
+    ifstream archivo_entrada(esquemas);
+    while(getline(archivo_entrada, linea_esquema)){
+        if (linea_esquema.find(nombre_relacion) != -1) {
+            stringstream ss(linea_esquema);
+            int pos = 0;
+            while (getline(ss, linea_esquema, '#')) {
+                if (pos > 0 && pos % 2 != 0) {
+                    cout << linea_esquema << '#';
+                }
+                pos += 1;
+            }
+            archivo_entrada.close();
+            return linea_esquema;
+        }
+    }
+    archivo_entrada.close();
+    return "Not found";
+}
 
+void consultas_datos(string nombre_relacion){
+    string linea_esquema;
+    vector <string> elementos;
+    ifstream archivo_entrada(esquemas);
+    string linea;
+    int pos;
 
+    while(getline(archivo_entrada, linea_esquema)){
+        string palabra_linea_esquema;
+        istringstream linea_esquema_stream(linea_esquema);
+        pos = linea_esquema.find(nombre_relacion);
+        if (pos == 0) {
+            while (getline(linea_esquema_stream, palabra_linea_esquema, '#')) {
+                if (pos > 1 && pos % 2 == 1) {
+                    elementos.push_back(palabra_linea_esquema);
+                }
+                pos++;
+            }
+            break;
+        }
+    }
+}
 //mejorar esto
 void init(){
     string commands;
@@ -216,6 +266,7 @@ void init(){
 }
 
 int main() {
-    init();
+    // init();
+    cout << encontrar_relacion("Estudiantes") << endl;
     return 0;  
 }
