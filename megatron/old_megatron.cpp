@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cctype>
 #include <vector>
+
 using namespace std;
 #define esquemas "Esquemas"
 
@@ -237,36 +238,160 @@ void consultas_datos(string nombre_relacion){
         pos = linea_esquema.find(nombre_relacion);
         if (pos == 0) {
             while (getline(linea_esquema_stream, palabra_linea_esquema, '#')) {
-                if (pos > 1 && pos % 2 == 1) {
+                if (pos > 0 && pos % 2 == 1) {
                     elementos.push_back(palabra_linea_esquema);
+                    cout<<pos;
                 }
                 pos++;
             }
             break;
         }
     }
+    int idx = 0;
+    for (auto i : elementos) {
+        cout << i;
+        if (idx < elementos.size() - 1) {
+            cout << "\t#\t";
+            idx++;
+        }
+    }
+    cout << endl;
+    cout << "-----------------------------------------------------" << endl;
+    
+    ifstream data_relacion(nombre_relacion);
+    int idj = 0;
+    while(getline(data_relacion, linea_esquema)) {
+        // cout << linea_esquema << endl;
+        stringstream ss(linea_esquema);
+        while (getline(ss, linea_esquema, '#')) {
+            cout << linea_esquema;
+            if (idj < idx) {
+                cout << "\t#\t";
+                idj++;
+            }
+        }
+        idj = 0;
+        cout << endl;
+    } 
 }
-//mejorar esto
-void init(){
-    string commands;
-    cout<<" % MEGATRON3000 %"<<endl<<endl;
-    cout<<"   WELCOME TO MEGATRON 3000!"<<endl<<endl;
-    cout<<" Write the command to realize:"<<endl<<endl;
-    while(true){
-        cin>>commands;
-        if(commands == "create_esquema")
-            create_esquema();
-        else if(commands == "create_relacion")
-            create_relacion();
-        else if(commands == "exit")
+
+vector<string> consultar_columnas(string nombre_columna) {
+    vector<string> columnas;
+    columnas.push_back(nombre_columna);
+    return columnas;
+}
+
+template <typename... Args>
+vector<string> consultar_columnas(string nombre_columna, Args... args) {
+    vector<string> columnas;
+    columnas.push_back(nombre_columna);
+    vector<string> columnas_siguientes = consultar_columnas(args...);
+    columnas.insert(columnas.end(), columnas_siguientes.begin(), columnas_siguientes.end());
+    return columnas;
+}
+
+vector<string> consultas_tablas(string nombre_relacion, string columna) {
+    string linea_esquema;
+    string linea_data;
+    vector <string> elementos;
+    ifstream archivo_entrada(esquemas);
+    ifstream archivo_data(nombre_relacion);
+    string linea;
+    int pos;
+    int pos_columna;
+    while(getline(archivo_entrada, linea_esquema)){
+        istringstream linea_esquema_stream(linea_esquema);
+        pos = linea_esquema.find(nombre_relacion);
+        string columna_esquema;
+        pos_columna = 0;
+        if (pos == 0) {
+            while (getline(linea_esquema_stream, columna_esquema, '#')) {
+                if (columna_esquema == columna) {
+                    break;
+                }
+                if (pos % 2 != 0) {
+                    pos_columna++;
+                }
+                pos++;
+            }
+        }
+        if (pos != -1) {
             break;
-        else
-            cout<<"Not command"<<endl;
+        }
+    }
+    int pos_data = 0;
+    vector<string> data;
+    while(getline(archivo_data, linea_data)) {
+        stringstream ss(linea_data);
+        string valor;
+        while (getline(ss, valor, '#')) {
+            if (pos_data == pos_columna) {
+                data.push_back(valor);
+            }
+            pos_data++;
+        }
+        pos_data = 0;
+    }
+    archivo_entrada.close();
+    return data;
+}
+
+void mezclar_data(vector<vector<string>> data) {
+    int data_size = data[0].size();
+    int aux = 0;
+    while (aux < data_size) {
+        for (int i = 0; i < data.size(); i++) {
+            cout << data[i][aux];
+            if (i < data.size() - 1) cout << "\t#\t";
+        }
+        cout << endl;
+        aux++;
     }
 }
 
+void consultas_tablas_final(string nombre_relacion, vector<string> columnas) {
+    vector<vector<string>> data;
+    for (int i = 0; i < columnas.size(); i++) {
+        cout << columnas[i];
+        if (i < columnas.size() - 1) cout << "\t#\t";
+        data.push_back(consultas_tablas(nombre_relacion, columnas[i]));
+    }
+
+    cout << endl;
+    mezclar_data(data);
+}
+
+//mejorar esto
+void init(){
+    // string commands;
+    // cout<<" % MEGATRON3000 %"<<endl<<endl;
+    // cout<<"   WELCOME TO MEGATRON 3000!"<<endl<<endl;
+    // cout<<" Write the command to realize:"<<endl<<endl;
+    // while(true){
+    //     cin>>commands;
+    //     if(commands == "create_esquema")
+    //         create_esquema();
+    //     else if(commands == "create_relacion")
+    //         create_relacion();
+    //     else if(commands == "SELECT*FROM") {
+    //         string nombre_relacion;
+    //         cin >> nombre_relacion;
+    //         consultas_datos(nombre_relacion);
+    //     }
+    //     else if(commands == "exit")
+    //         break;
+    //     else
+    //         cout<<"Not command"<<endl;
+    // }
+}
+
 int main() {
-    // init();
-    cout << encontrar_relacion("Estudiantes") << endl;
-    return 0;  
+    init();
+    // consultas_tablas("Titanic", "id");
+    // consultas_tablas("Estudiantes", columna); // SELECT dpto FROM Estudiantes -> -> SELECT dpto, id, nombre FROM Estudiantes
+    // consultas_datos("Estudiantes");
+    // cout << encontrar_relacion("Estudiantes") << endl;
+    vector<string> columnas = consultar_columnas("id", "dpto", "nombre"); // ["id", "dpto", "nombre", ....]
+    consultas_tablas_final("Estudiantes", columnas); // SELECT id, nombre, dpto FROM Estudiantes
+    return 0;
 }
