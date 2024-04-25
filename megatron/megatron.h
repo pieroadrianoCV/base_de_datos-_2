@@ -15,20 +15,26 @@ struct Column {
 
 class Schema {
 public:
-    Schema(std::string name = name_esquema, std::vector<Column> columns = {}) : name(name), columns(columns) {}
+    // Schema(std::string name, std::vector<Column> columns = {});
+    Schema(std::string name, std::string file_name);
+
     std::string name;
     std::vector<Column> columns;
 
+    void save_squema();
     void add_column(const std::string&, const std::string&);
+    void print_schema();
 };
 
 class Database {
 public:
-    Database(std::string name = name_db, Schema schema) : name(name), schema(schema) {}
+    Database(Schema schema, std::string name = name_db) : name(name), schema(schema) {}
     std::string name;
     Schema schema;
 
     void add_schema(const Schema&);
+    void reload_db();
+    void print_prompt();
 };
 
 #endif  // MEGATRON_H
